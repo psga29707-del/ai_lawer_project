@@ -199,7 +199,7 @@
         <div class="col-md-8 col-lg-6 col-xl-5">
 
             <div class="login-container-wrapper">
-                <div class="personal-logo">gassp</div>
+                <div class="personal-logo">gassp_lawer</div>
 
                 <div class="login-card">
                     <div class="brand-section">

@@ -6,15 +6,20 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import select, desc, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import json
+
+from fastapi.responses import StreamingResponse
+
 from config import CHROMA_PERSIST_DIR
-from models import Base, UserModel
+from models import Base, UserModel, ConversationModel, MessageModel
 from services.database import law_vectorstore
 from services.llm_agent import generate_legal_report, modify_contract_text
 from services.legal_agent import agent_modify_contract
 from services.mysql_db import async_engine, get_db_session
+from services.chat_service import generate_chat_response
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +75,21 @@ class RegisterPayload(BaseModel):
 class LoginPayload(BaseModel):
     username: str
     password: str
+
+
+class ChatConversationPayload(BaseModel):
+    username: str
+
+
+class ChatCreatePayload(BaseModel):
+    username: str
+    title: str = "新对话"
+
+
+class ChatSendPayload(BaseModel):
+    username: str
+    conversation_id: int | None = None
+    message: str
 
 
 @app.post("/api/v1/register")
@@ -209,6 +229,215 @@ async def agent_modify(payload: AgentModifyPayload):
     except Exception as exc:
         logger.exception("Agent 合同修改失败")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+# ═══════════════════════════════════════════════════════════
+# 聊天模块（单纯聊聊）
+# ═══════════════════════════════════════════════════════════
+
+@app.post("/api/v1/chat/conversations")
+async def list_conversations(
+    payload: ChatConversationPayload,
+    session: AsyncSession = Depends(get_db_session),
+):
+    """获取用户的所有对话列表。"""
+    username = payload.username.strip()
+    if not username:
+        raise HTTPException(status_code=400, detail="用户名不能为空。")
+
+    result = await session.execute(
+        select(UserModel).where(UserModel.username == username)
+    )
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在。")
+
+    stmt = (
+        select(ConversationModel)
+        .where(ConversationModel.user_id == user.id)
+        .order_by(desc(ConversationModel.updated_at))
+    )
+    result = await session.execute(stmt)
+    conversations = result.scalars().all()
+    return {
+        "status": "success",
+        "conversations": [
+            {
+                "id": c.id,
+                "title": c.title,
+                "created_at": c.created_at.isoformat() if c.created_at else None,
+                "updated_at": c.updated_at.isoformat() if c.updated_at else None,
+            }
+            for c in conversations
+        ],
+    }
+
+
+@app.post("/api/v1/chat/conversations/create")
+async def create_conversation(
+    payload: ChatCreatePayload,
+    session: AsyncSession = Depends(get_db_session),
+):
+    """创建新对话。"""
+    username = payload.username.strip()
+    if not username:
+        raise HTTPException(status_code=400, detail="用户名不能为空。")
+
+    result = await session.execute(
+        select(UserModel).where(UserModel.username == username)
+    )
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在。")
+
+    conv = ConversationModel(user_id=user.id, title=payload.title or "新对话")
+    session.add(conv)
+    await session.commit()
+    await session.refresh(conv)
+    return {
+        "status": "success",
+        "conversation": {
+            "id": conv.id,
+            "title": conv.title,
+            "created_at": conv.created_at.isoformat() if conv.created_at else None,
+        },
+    }
+
+
+@app.post("/api/v1/chat/conversations/{conversation_id}/messages")
+async def get_messages(
+    conversation_id: int,
+    payload: ChatConversationPayload,
+    session: AsyncSession = Depends(get_db_session),
+):
+    """获取指定对话的消息列表。"""
+    username = payload.username.strip()
+    result = await session.execute(
+        select(UserModel).where(UserModel.username == username)
+    )
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在。")
+
+    conv = await session.get(ConversationModel, conversation_id)
+    if not conv or conv.user_id != user.id:
+        raise HTTPException(status_code=404, detail="对话不存在。")
+
+    stmt = (
+        select(MessageModel)
+        .where(MessageModel.conversation_id == conversation_id)
+        .order_by(MessageModel.created_at)
+    )
+    result = await session.execute(stmt)
+    messages = result.scalars().all()
+    return {
+        "status": "success",
+        "messages": [
+            {
+                "id": m.id,
+                "role": m.role,
+                "content": m.content,
+                "created_at": m.created_at.isoformat() if m.created_at else None,
+            }
+            for m in messages
+        ],
+    }
+
+
+@app.delete("/api/v1/chat/conversations/{conversation_id}")
+async def delete_conversation(
+    conversation_id: int,
+    payload: ChatConversationPayload,
+    session: AsyncSession = Depends(get_db_session),
+):
+    """删除对话及其所有消息。"""
+    username = payload.username.strip()
+    result = await session.execute(
+        select(UserModel).where(UserModel.username == username)
+    )
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在。")
+
+    conv = await session.get(ConversationModel, conversation_id)
+    if not conv or conv.user_id != user.id:
+        raise HTTPException(status_code=404, detail="对话不存在。")
+
+    # 先删消息，再删对话
+    await session.execute(
+        delete(MessageModel).where(MessageModel.conversation_id == conversation_id)
+    )
+    await session.delete(conv)
+    await session.commit()
+    return {"status": "success", "message": "对话已删除。"}
+
+
+@app.post("/api/v1/chat/stream")
+async def chat_stream(
+    payload: ChatSendPayload,
+    session: AsyncSession = Depends(get_db_session),
+):
+    """流式聊天接口（SSE）。
+
+    接收用户消息，返回 SSE 事件流：
+      data: {"type": "token", "content": "..."}
+      data: {"type": "done", "conversation_id": N}
+      data: {"type": "error", "content": "..."}
+    """
+    username = payload.username.strip()
+    user_message = payload.message.strip()
+
+    if not username:
+        raise HTTPException(status_code=400, detail="用户名不能为空。")
+    if not user_message:
+        raise HTTPException(status_code=400, detail="消息不能为空。")
+
+    # 验证用户
+    result = await session.execute(
+        select(UserModel).where(UserModel.username == username)
+    )
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在，请先注册。")
+
+    # 创建或获取对话
+    conversation_id = payload.conversation_id
+    if conversation_id is None:
+        conv = ConversationModel(user_id=user.id, title="新对话")
+        session.add(conv)
+        await session.commit()
+        await session.refresh(conv)
+        conversation_id = conv.id
+    else:
+        conv = await session.get(ConversationModel, conversation_id)
+        if not conv or conv.user_id != user.id:
+            raise HTTPException(status_code=404, detail="对话不存在。")
+
+    async def event_stream():
+        """SSE 事件流生成器。"""
+        try:
+            async for token in generate_chat_response(
+                user_message, conversation_id, session
+            ):
+                data = json.dumps({"type": "token", "content": token})
+                yield f"data: {data}\n\n"
+
+            data = json.dumps({"type": "done", "conversation_id": conversation_id})
+            yield f"data: {data}\n\n"
+        except Exception as e:
+            logger.exception("聊天流式响应异常")
+            data = json.dumps({"type": "error", "content": str(e)})
+            yield f"data: {data}\n\n"
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 if __name__ == "__main__":

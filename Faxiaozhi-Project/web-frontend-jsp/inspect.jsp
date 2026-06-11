@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" isELIgnored="true" %>
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -1259,6 +1259,355 @@
                 justify-content: center;
             }
         }
+        /* ── 模块导航栏 ── */
+        .module-nav {
+            position: sticky;
+            top: 76px;
+            z-index: 19;
+            backdrop-filter: blur(12px);
+            background: rgba(3, 5, 8, 0.70);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .module-nav-inner {
+            display: flex;
+            align-items: center;
+            gap: 0;
+        }
+
+        .module-nav .nav-tabs {
+            border-bottom: none;
+        }
+
+        .module-nav .nav-link {
+            border-radius: 0;
+            border: none;
+            border-bottom: 2px solid transparent;
+            padding: 0.75rem 1.25rem;
+            color: var(--text-muted);
+            font-family: var(--mono);
+            font-size: 0.82rem;
+            letter-spacing: 0.06em;
+            background: transparent;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .module-nav .nav-link:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .module-nav .nav-link.active {
+            color: var(--text-main);
+            background: transparent;
+            border-bottom-color: var(--accent-strong);
+        }
+
+        .workspace-chat {
+            padding-bottom: 0 !important;
+        }
+
+        /* ── 聊天界面 ── */
+        .chat-workspace {
+            padding: 1.5rem 0 2.5rem;
+        }
+
+        .chat-layout {
+            display: grid;
+            grid-template-columns: 280px minmax(0, 1fr);
+            gap: 1.5rem;
+            min-height: 620px;
+        }
+
+        .chat-sidebar {
+            border: 1px solid var(--panel-border);
+            background: linear-gradient(180deg, rgba(10, 14, 20, 0.94), rgba(5, 8, 12, 0.92));
+            box-shadow: var(--panel-shadow);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .conversation-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
+        .conv-empty {
+            padding: 2rem 1rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .conv-empty p {
+            margin-bottom: 0.5rem;
+        }
+
+        .conv-empty-hint {
+            font-size: 0.85rem;
+            opacity: 0.7;
+        }
+
+        .conversation-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.15s ease;
+            position: relative;
+            margin-bottom: 2px;
+        }
+
+        .conversation-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .conversation-item.active {
+            background: rgba(116, 208, 255, 0.08);
+            border-color: rgba(116, 208, 255, 0.24);
+        }
+
+        .conv-title {
+            flex: 1;
+            font-size: 0.88rem;
+            color: var(--text-main);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .conv-meta {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-family: var(--mono);
+            white-space: nowrap;
+        }
+
+        .conv-delete {
+            opacity: 0;
+            background: none;
+            border: none;
+            color: var(--danger);
+            padding: 0.25rem;
+            cursor: pointer;
+            transition: opacity 0.15s ease;
+        }
+
+        .conversation-item:hover .conv-delete {
+            opacity: 0.6;
+        }
+
+        .conv-delete:hover {
+            opacity: 1 !important;
+        }
+
+        .chat-main {
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--panel-border);
+            background: linear-gradient(180deg, rgba(10, 14, 20, 0.94), rgba(5, 8, 12, 0.92));
+            box-shadow: var(--panel-shadow);
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            min-height: 480px;
+            max-height: 580px;
+        }
+
+        .chat-empty {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+        }
+
+        .chat-empty-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 72px;
+            height: 72px;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            font-size: 1.8rem;
+            color: var(--accent-strong);
+        }
+
+        .chat-empty-title {
+            margin: 0 0 0.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .chat-empty-copy {
+            max-width: 360px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        .chat-bubble {
+            display: flex;
+            gap: 0.75rem;
+            max-width: 85%;
+        }
+
+        .chat-bubble.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .chat-bubble.assistant {
+            align-self: flex-start;
+        }
+
+        .bubble-avatar {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            flex-shrink: 0;
+        }
+
+        .bubble-avatar.user {
+            background: rgba(116, 208, 255, 0.15);
+            color: var(--accent-strong);
+        }
+
+        .bubble-avatar.assistant {
+            background: rgba(115, 226, 180, 0.15);
+            color: var(--success);
+        }
+
+        .bubble-content {
+            padding: 0.75rem 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.03);
+            line-height: 1.7;
+            font-size: 0.92rem;
+            color: var(--text-subtle);
+        }
+
+        .bubble-content > :first-child { margin-top: 0; }
+        .bubble-content > :last-child { margin-bottom: 0; }
+
+        .bubble-content.streaming::after {
+            content: "|";
+            animation: cursorBlink 0.8s step-end infinite;
+            color: var(--accent);
+            margin-left: 2px;
+        }
+
+        @keyframes cursorBlink {
+            50% { opacity: 0; }
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 0.75rem;
+            padding: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            align-items: flex-end;
+        }
+
+        .chat-input {
+            flex: 1;
+            border-radius: 0;
+            border: 1px solid rgba(255, 255, 255, 0.11);
+            background: rgba(7, 10, 15, 0.96);
+            color: var(--text-main);
+            resize: none;
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+
+        .chat-input:focus {
+            background: rgba(9, 13, 19, 0.98);
+            border-color: var(--panel-border-strong);
+            box-shadow: 0 0 0 0.2rem rgba(116, 208, 255, 0.10);
+            color: var(--text-main);
+        }
+
+        .send-btn {
+            min-height: 44px;
+            padding: 0.65rem 1.2rem;
+            white-space: nowrap;
+        }
+
+        .thinking-dots {
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .thinking-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            animation: dotPulse 1.4s ease-in-out infinite;
+        }
+
+        .thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes dotPulse {
+            0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+            40% { opacity: 1; transform: scale(1); }
+        }
+
+        .sidebar-toggle-btn {
+            display: none;
+        }
+
+        .chat-main {
+            position: relative;
+        }
+
+        @media (max-width: 991.98px) {
+            .sidebar-toggle-btn {
+                display: inline-flex;
+                position: absolute;
+                top: 0.5rem;
+                right: 0.5rem;
+                z-index: 5;
+            }
+            .chat-layout {
+                grid-template-columns: 1fr;
+            }
+            .chat-sidebar {
+                max-height: 300px;
+                overflow-y: auto;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1293,9 +1642,27 @@
         </div>
     </header>
 
-    <main class="workspace">
+    <!-- 模块导航栏 -->
+    <nav class="module-nav">
+        <div class="shell-frame module-nav-inner">
+            <div class="nav nav-tabs" role="tablist">
+                <button class="nav-link" :class="{ active: activeModule === 'review' }"
+                        @click="switchModule('review')" role="tab">
+                    <i class="bi bi-file-earmark-code" aria-hidden="true"></i>
+                    代码审查
+                </button>
+                <button class="nav-link" :class="{ active: activeModule === 'chat' }"
+                        @click="switchModule('chat')" role="tab">
+                    <i class="bi bi-chat-dots" aria-hidden="true"></i>
+                    单纯聊聊
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="workspace" :class="{ 'workspace-chat': activeModule === 'chat' }">
         <div class="shell-frame">
-            <section class="workspace-hero">
+            <section v-if="activeModule === 'review'" class="workspace-hero">
                 <div class="workspace-hero-content">
                     <div>
                         <div class="hero-kicker">Contract Review Console</div>
@@ -1318,7 +1685,7 @@
                 </div>
             </section>
 
-            <section class="workspace-grid">
+            <section v-if="activeModule === 'review'" class="workspace-grid">
                 <div class="console-panel">
                     <div class="panel-header">
                         <div>
@@ -1471,7 +1838,7 @@
                 </div>
             </section>
 
-            <section class="support-grid">
+            <section v-if="activeModule === 'review'" class="support-grid">
                 <article class="support-card">
                     <div class="support-kicker">Capability 01</div>
                     <i class="bi bi-search" aria-hidden="true"></i>
@@ -1494,12 +1861,123 @@
                 </article>
             </section>
 
-            <footer class="console-footer">
+            <footer v-if="activeModule === 'review'" class="console-footer">
                 <p class="footer-copy">
                     2026 法小智 | 面向青年就业权益保护的劳动合同智能审查平台，仅供学习与参考。
                 </p>
                 <div class="footer-meta">Console Status: Active Session</div>
             </footer>
+
+            <!-- ════════════════════════════════════════════════ -->
+            <!-- 聊天界面（单纯聊聊）                             -->
+            <!-- ════════════════════════════════════════════════ -->
+            <section v-if="activeModule === 'chat'" class="chat-workspace">
+                <div class="chat-layout">
+                    <!-- 侧边栏：对话列表 -->
+                    <aside class="chat-sidebar" :style="{ display: showChatSidebar ? '' : 'none' }">
+                        <div class="sidebar-header">
+                            <div class="panel-kicker">Chat History</div>
+                            <button class="console-ghost-btn" @click="createNewConversation">
+                                <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                                新对话
+                            </button>
+                        </div>
+                        <div class="conversation-list">
+                            <div v-if="chatConversations.length === 0" class="conv-empty">
+                                <p>暂无对话记录</p>
+                                <p class="conv-empty-hint">点击「新对话」开始聊天</p>
+                            </div>
+                            <div v-for="conv in chatConversations" :key="conv.id"
+                                 class="conversation-item"
+                                 :class="{ active: conv.id === currentConversationId }"
+                                 @click="switchConversation(conv.id)">
+                                <div class="conv-title">{{ conv.title }}</div>
+                                <div class="conv-meta">{{ formatTime(conv.updated_at) }}</div>
+                                <button class="conv-delete" @click.stop="deleteConversation(conv.id)"
+                                        title="删除对话">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </aside>
+
+                    <!-- 主区域：消息 + 输入 -->
+                    <main class="chat-main">
+                        <button class="sidebar-toggle-btn console-ghost-btn"
+                                @click="showChatSidebar = !showChatSidebar"
+                                :title="showChatSidebar ? '隐藏对话列表' : '显示对话列表'">
+                            <i class="bi" :class="showChatSidebar ? 'bi-layout-sidebar-inset' : 'bi-layout-sidebar'"></i>
+                        </button>
+                        <div class="chat-messages" ref="messagesRef">
+                            <!-- 空状态 -->
+                            <div v-if="chatMessages.length === 0 && !isChatLoading" class="chat-empty">
+                                <div class="chat-empty-icon">
+                                    <i class="bi bi-chat-dots"></i>
+                                </div>
+                                <h3 class="chat-empty-title">开始聊天</h3>
+                                <p class="chat-empty-copy">
+                                    请输入您关于劳动法、合同条款或职场权益的任何问题，法小智将为您解答。
+                                </p>
+                                <button class="console-btn console-btn-primary mt-3" @click="createNewConversation" style="min-height:44px;padding:0.65rem 1.5rem;">
+                                    <i class="bi bi-plus-lg me-2"></i>新对话
+                                </button>
+                            </div>
+
+                            <!-- 消息气泡 -->
+                            <div v-for="msg in chatMessages" :key="msg.id"
+                                 class="chat-bubble"
+                                 :class="msg.role">
+                                <div class="bubble-avatar" :class="msg.role">
+                                    <i :class="msg.role === 'user' ? 'bi bi-person' : 'bi bi-robot'"></i>
+                                </div>
+                                <div class="bubble-content" v-html="renderMarkdown(msg.content)"></div>
+                            </div>
+
+                            <!-- 流式响应占位 -->
+                            <div v-if="isChatLoading && chatStreamText" class="chat-bubble assistant">
+                                <div class="bubble-avatar assistant">
+                                    <i class="bi bi-robot"></i>
+                                </div>
+                                <div class="bubble-content streaming" v-html="renderMarkdown(chatStreamText)"></div>
+                            </div>
+
+                            <!-- 加载动画 -->
+                            <div v-if="isChatLoading && !chatStreamText" class="chat-bubble assistant">
+                                <div class="bubble-avatar assistant">
+                                    <i class="bi bi-robot"></i>
+                                </div>
+                                <div class="bubble-content">
+                                    <span class="thinking-dots">
+                                        <span></span><span></span><span></span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 输入区域 -->
+                        <div class="chat-input-area">
+                            <textarea v-model="chatInput"
+                                      placeholder="请输入您的问题..."
+                                      @keydown.enter.exact.prevent="sendChatMessage"
+                                      :disabled="isChatLoading"
+                                      rows="2"
+                                      class="form-control chat-input"></textarea>
+                            <button class="console-btn console-btn-primary send-btn"
+                                    @click="sendChatMessage"
+                                    :disabled="isChatLoading || !chatInput.trim()">
+                                <span v-if="isChatLoading">
+                                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                    发送中...
+                                </span>
+                                <span v-else>
+                                    <i class="bi bi-send me-1"></i>
+                                    发送
+                                </span>
+                            </button>
+                        </div>
+                    </main>
+                </div>
+            </section>
         </div>
     </main>
 </div>
@@ -1919,12 +2397,245 @@
                 }
             };
 
+            // ── 模块切换 ──
+            const activeModule = ref('review');
+
+            const switchModule = (module) => {
+                activeModule.value = module;
+                if (module === 'chat') {
+                    loadConversations();
+                }
+            };
+
+            // ── 聊天状态 ──
+            const chatConversations = ref([]);
+            const currentConversationId = ref(null);
+            const chatMessages = ref([]);
+            const chatInput = ref('');
+            const isChatLoading = ref(false);
+            const chatStreamText = ref('');
+            const messagesRef = ref(null);
+            const showChatSidebar = ref(window.innerWidth >= 992);
+
+            const API_CHAT_BASE = 'http://127.0.0.1:8001/api/v1/chat';
+
+            // ── 工具函数 ──
+            const renderMarkdown = (text) => {
+                if (!text) return '';
+                marked.setOptions({ breaks: true, gfm: true });
+                return marked.parse(text);
+            };
+
+            const formatTime = (isoStr) => {
+                if (!isoStr) return '';
+                const d = new Date(isoStr);
+                const now = new Date();
+                const isToday = d.toDateString() === now.toDateString();
+                const pad = (n) => String(n).padStart(2, '0');
+                const time = pad(d.getHours()) + ':' + pad(d.getMinutes());
+                if (isToday) return time;
+                return pad(d.getMonth()+1) + '/' + pad(d.getDate()) + ' ' + time;
+            };
+
+            const scrollChatToBottom = () => {
+                Vue.nextTick(() => {
+                    if (messagesRef.value) {
+                        messagesRef.value.scrollTop = messagesRef.value.scrollHeight;
+                    }
+                });
+            };
+
+            // ── 加载对话列表 ──
+            const loadConversations = async () => {
+                try {
+                    const res = await axios.post(`${API_CHAT_BASE}/conversations`, {
+                        username: currentUser.value,
+                    }, { timeout: 10000 });
+                    if (res.data.status === 'success') {
+                        chatConversations.value = res.data.conversations || [];
+                    }
+                } catch (err) {
+                    console.error('加载对话列表失败', err);
+                }
+            };
+
+            // ── 切换对话 ──
+            const switchConversation = async (convId) => {
+                if (isChatLoading.value) return;
+
+                currentConversationId.value = convId;
+                chatMessages.value = [];
+                chatStreamText.value = '';
+
+                try {
+                    const res = await axios.post(
+                        `${API_CHAT_BASE}/conversations/${convId}/messages`,
+                        { username: currentUser.value },
+                        { timeout: 10000 }
+                    );
+                    if (res.data.status === 'success') {
+                        chatMessages.value = res.data.messages || [];
+                    }
+                } catch (err) {
+                    console.error('加载消息失败', err);
+                }
+            };
+
+            // ── 创建新对话 ──
+            const createNewConversation = async () => {
+                if (isChatLoading.value) return;
+
+                try {
+                    const res = await axios.post(`${API_CHAT_BASE}/conversations/create`, {
+                        username: currentUser.value,
+                        title: '新对话',
+                    }, { timeout: 10000 });
+                    if (res.data.status === 'success') {
+                        await loadConversations();
+                        currentConversationId.value = res.data.conversation.id;
+                        chatMessages.value = [];
+                        chatStreamText.value = '';
+                    }
+                } catch (err) {
+                    console.error('创建对话失败', err);
+                }
+            };
+
+            // ── 删除对话 ──
+            const deleteConversation = async (convId) => {
+                if (isChatLoading.value) return;
+                if (!confirm('确定删除此对话？此操作不可撤销。')) return;
+
+                try {
+                    await axios.delete(`${API_CHAT_BASE}/conversations/${convId}`, {
+                        data: { username: currentUser.value },
+                        headers: { 'Content-Type': 'application/json' },
+                        timeout: 10000,
+                    });
+                    if (currentConversationId.value === convId) {
+                        currentConversationId.value = null;
+                        chatMessages.value = [];
+                    }
+                    await loadConversations();
+                } catch (err) {
+                    console.error('删除对话失败', err);
+                }
+            };
+
+            // ── 发送消息（流式） ──
+            const sendChatMessage = async () => {
+                const text = chatInput.value.trim();
+                if (!text || isChatLoading.value) return;
+
+                // 无活动对话时自动创建
+                let convId = currentConversationId.value;
+                if (!convId) {
+                    try {
+                        const res = await axios.post(`${API_CHAT_BASE}/conversations/create`, {
+                            username: currentUser.value,
+                            title: text.slice(0, 30),
+                        }, { timeout: 10000 });
+                        if (res.data.status === 'success') {
+                            convId = res.data.conversation.id;
+                            currentConversationId.value = convId;
+                            await loadConversations();
+                        }
+                    } catch (err) {
+                        console.error('创建对话失败', err);
+                        return;
+                    }
+                }
+
+                // 乐观添加用户消息
+                chatMessages.value.push({
+                    id: Date.now(),
+                    role: 'user',
+                    content: text,
+                });
+                chatInput.value = '';
+                isChatLoading.value = true;
+                chatStreamText.value = '';
+                scrollChatToBottom();
+
+                // 使用 fetch POST + ReadableStream 读取 SSE
+                try {
+                    const response = await fetch(`${API_CHAT_BASE}/stream`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            username: currentUser.value,
+                            conversation_id: convId,
+                            message: text,
+                        }),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = '';
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop() || '';
+
+                        for (const line of lines) {
+                            if (line.startsWith('data: ')) {
+                                try {
+                                    const data = JSON.parse(line.slice(6));
+                                    if (data.type === 'token') {
+                                        chatStreamText.value += data.content;
+                                    } else if (data.type === 'done') {
+                                        // 流完成，添加助手消息
+                                        chatMessages.value.push({
+                                            id: Date.now() + 1,
+                                            role: 'assistant',
+                                            content: chatStreamText.value,
+                                        });
+                                        chatStreamText.value = '';
+                                        await loadConversations();
+                                    } else if (data.type === 'error') {
+                                        error.value = data.content;
+                                    }
+                                } catch (e) {
+                                    console.error('SSE 解析错误', e);
+                                }
+                            }
+                        }
+                        scrollChatToBottom();
+                    }
+                } catch (err) {
+                    if (err.name === 'AbortError') {
+                        // 用户切换或取消
+                    } else {
+                        error.value = '连接失败: ' + (err.message || '未知错误');
+                    }
+                } finally {
+                    isChatLoading.value = false;
+                }
+            };
+
             return {
                 currentUser, logout,
                 contractText, reviewResult, modifyResult,
                 reviewLoading, modifyLoading, error, activeTab,
                 renderedReview, renderedModify,
                 submitReview, submitModify,
+                // 聊天
+                activeModule, switchModule,
+                showChatSidebar,
+                chatConversations, currentConversationId, chatMessages,
+                chatInput, isChatLoading, chatStreamText, messagesRef,
+                renderMarkdown, formatTime,
+                loadConversations, switchConversation,
+                createNewConversation, deleteConversation,
+                sendChatMessage,
             };
         }
     }).mount('#app');

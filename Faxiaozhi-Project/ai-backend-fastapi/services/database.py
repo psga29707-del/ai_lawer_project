@@ -24,6 +24,9 @@ try:
             openai_api_key=LLM_API_KEY,
             openai_api_base=LLM_BASE_URL,
             check_embedding_ctx_length=False,
+            max_retries=3,
+            # Zhipu embedding-2 每次请求最多 64 条输入
+            chunk_size=20,
         ),
         persist_directory=str(CHROMA_PERSIST_DIR),
     )
