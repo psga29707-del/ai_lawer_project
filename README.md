@@ -15,12 +15,13 @@
 
 ## 项目简介
 
-**法小智**是一个面向职场新人的 AI 法律审查助手。用户只需粘贴劳动合同或协议文本，系统即可自动识别不公平条款，并基于法律知识库生成结构化风险审查报告或合规修改建议。
+**法小智**是一个面向职场新人的 AI 法律审查助手。用户只需粘贴劳动合同或协议文本，系统即可自动识别不公平条款，并基于法律知识库生成结构化风险审查报告或合规修改建议。同时还提供 AI 法律问答聊天功能（"单纯聊聊"），支持条件 RAG、对话持久化记忆和流式输出。
 
 > **核心场景**：
 > - 刚毕业的大学生审查 Offer / 劳动合同
 > - 识别试用期、违约金、竞业限制等常见陷阱
 > - 一键生成合规修改后的合同文本
+> - 随时咨询劳动法、职场权益相关问题
 
 ---
 
@@ -34,7 +35,8 @@
 | **向量数据库** | ChromaDB（本地持久化） | 法条语义检索（RAG） |
 | **关系数据库** | MySQL + SQLAlchemy 异步 ORM | 用户注册 / 登录 |
 | **AI Agent** | LangChain Agent 框架 | 逐条分析 → 检索 → 修改 |
-| **前端** | JSP + Vue 3 + Bootstrap 5 + Three.js | 暗色控制台审查工作台 |
+| **前端** | JSP + Vue 3 + Bootstrap 5 + Three.js | 暗色控制台审查工作台 + 聊天界面 |
+| **AI 对话** | SSE 流式 + 条件 RAG + 持久化记忆 | "单纯聊聊"法律问答功能 |
 | **部署** | 前端 → Tomcat / 后端 → uvicorn | 前后端分离 |
 
 ---
@@ -45,16 +47,19 @@
 ai_lawer_project/
 └── Faxiaozhi-Project/
     ├── ai-backend-fastapi/          # FastAPI 后端服务
-    │   ├── main.py                  # API 路由入口（6 个接口）
-    │   ├── config.py                # 全局配置（LLM/Chroma/MySQL/Prompts）
+    │   ├── main.py                  # API 路由入口（11 个接口）
+    │   ├── config.py                # 全局配置（LLM/Chroma/MySQL/Prompts/聊天）
     │   ├── models/                  # SQLAlchemy 数据模型
     │   │   ├── base.py
-    │   │   └── user.py              # UserModel（users 表）
+    │   │   ├── user.py              # UserModel（users 表）
+    │   │   ├── conversation.py      # ConversationModel（对话记录表）
+    │   │   └── message.py           # MessageModel（消息记录表）
     │   ├── services/                # 核心业务服务
     │   │   ├── mysql_db.py          # MySQL 异步引擎 + 会话管理
     │   │   ├── database.py          # ChromaDB 向量存储 + 语义检索
     │   │   ├── llm_agent.py         # LCEL 链（RAG + LLM 推理）
-    │   │   └── legal_agent.py       # LangChain Agent 智能修改
+    │   │   ├── legal_agent.py       # LangChain Agent 智能修改
+    │   │   └── chat_service.py      # 流式聊天服务（条件RAG + 记忆加载）
     │   ├── scripts/                 # 工具脚本
     │   │   ├── init_db.py           # ChromaDB 初始化（5 条基础法条）
     │   │   ├── import_markdown_to_chroma.py  # 批量导入 Markdown 法条
@@ -128,6 +133,11 @@ http://localhost:8080/faxiaozhi/login.jsp
 | POST | `/api/v1/user_review` | 需登录的用户审查（MySQL 校验） |
 | POST | `/api/v1/agent_modify` | **Agent 智能修改**（逐条分析→检索→重写） |
 | POST | `/api/v1/modify` | 简单版合同修改 |
+| POST | `/api/v1/chat/conversations` | 获取用户对话列表 |
+| POST | `/api/v1/chat/conversations/create` | 创建新对话 |
+| POST | `/api/v1/chat/conversations/{id}/messages` | 获取对话消息历史 |
+| DELETE | `/api/v1/chat/conversations/{id}` | 删除对话 |
+| POST | `/api/v1/chat/stream` | **SSE 流式聊天**（条件 RAG + 流式输出） |
 
 ### 调用示例
 
@@ -141,6 +151,11 @@ curl -X POST http://127.0.0.1:8001/api/v1/review \
 curl -X POST http://127.0.0.1:8001/api/v1/agent_modify \
   -H "Content-Type: application/json" \
   -d '{"text": "员工离职需提前三个月通知，否则支付违约金"}'
+
+# 流式聊天（SSE）
+curl -N -X POST http://127.0.0.1:8001/api/v1/chat/stream \
+  -H "Content-Type: application/json" \
+  -d '{"username": "your_name", "message": "试用期最长多久？"}'
 ```
 
 ---
@@ -175,6 +190,24 @@ Agent 分析合同
 汇总输出完整修改版 + 修改说明
 ```
 
+### "单纯聊聊"聊天流程
+
+```
+用户输入消息
+       ↓
+关键词检测（是否涉及法律话题？）
+       ├── 是 → ChromaDB 检索相关法条（条件 RAG）
+       └── 否 → 跳过检索，直接进入 LLM
+       ↓
+从 MySQL 加载最近 10 轮对话历史
+       ↓
+构建消息列表（系统人设 + RAG 上下文 + 历史 + 当前消息）
+       ↓
+LLM 流式生成（SSE 逐 token 推送）
+       ↓
+流结束后自动保存对话到 MySQL
+```
+
 ---
 
 ## 法律知识库
@@ -194,9 +227,10 @@ ChromaDB 中已存储 **24 条**法律知识，涵盖：
 | 问题 | 说明 | 缓解方案 |
 |------|------|----------|
 | **检索慢** | ChromaDB 检索 ~9s（因智谱 embedding-2 API 响应慢） | 前端设 120s 超时 |
-| **生成慢** | LLM 生成 30-50s | 已在 `_invoke_with_retry` 中异步处理 |
+| **生成慢** | LLM 生成 30-50s | 已使用流式 SSE 分片输出 |
 | **密码安全** | 目前使用 SHA256（非 bcrypt/argon2） | 后续迭代改进 |
 | **无 Token** | 登录后未签发 JWT Token | 当前用 localStorage 存用户名 |
+| **环境依赖** | 需使用系统 Python（非 Anaconda）避免 langchain-openai 版本过旧 | 确认 `langchain-openai>=1.3.0` |
 
 ---
 
@@ -205,8 +239,8 @@ ChromaDB 中已存储 **24 条**法律知识，涵盖：
 - [ ] 换用本地 embedding 模型加速检索
 - [ ] 引入 Redis 缓存热点法条
 - [ ] 支持 PDF 合同文件上传
-- [ ] 增加律师在线咨询对接功能
 - [ ] 管理后台：用户管理 + 法条编辑
+- [ ] 增加律师在线咨询对接功能
 
 ---
 
