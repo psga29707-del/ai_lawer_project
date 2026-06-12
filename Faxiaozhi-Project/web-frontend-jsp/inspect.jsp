@@ -101,6 +101,41 @@
                         </div>
                     </div>
 
+                    <!-- 文件上传拖拽区 -->
+                    <div class="file-upload-zone"
+                         @click="triggerFilePicker"
+                         @dragover.prevent
+                         @drop.prevent="handleFileDrop"
+                         :class="{ 'upload-active': isUploading }">
+                        <input type="file" ref="fileInputRef"
+                               accept=".pdf,.doc,.docx"
+                               @change="handleFileSelect"
+                               style="display:none">
+
+                        <!-- 正在上传 -->
+                        <div v-if="isUploading" class="upload-state">
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            <span>正在解析文件...</span>
+                        </div>
+
+                        <!-- 文件已选中 -->
+                        <div v-else-if="uploadedFile" class="upload-file-info">
+                            <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+                            <span class="file-name">{{ uploadedFile.name }}</span>
+                            <span class="file-size">{{ formatFileSize(uploadedFile.size) }}</span>
+                            <button class="file-remove-btn ms-2" @click.stop="removeFile" title="移除文件">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+
+                        <!-- 空状态 -->
+                        <div v-else class="upload-placeholder">
+                            <i class="bi bi-cloud-upload" aria-hidden="true"></i>
+                            <span>拖拽 PDF/Word 文件到此处，或点击选择</span>
+                            <span class="upload-hint">支持 .pdf .docx，最大 10MB</span>
+                        </div>
+                    </div>
+
                     <textarea
                         v-model="contractText"
                         class="form-control contract-textarea"

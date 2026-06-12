@@ -1,9 +1,11 @@
 import asyncio
 import hashlib
+import io
 import logging
+import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy import select, desc, delete
@@ -90,6 +92,89 @@ class ChatSendPayload(BaseModel):
     username: str
     conversation_id: int | None = None
     message: str
+
+
+# ═══════════════════════════════════════════════════════════
+# 文件上传与文本提取
+# ═══════════════════════════════════════════════════════════
+
+ALLOWED_EXTENSIONS = {".pdf", ".doc", ".docx"}
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+
+
+def extract_text_from_pdf(file_bytes: bytes) -> str:
+    """使用 PyMuPDF 提取 PDF 文本内容。"""
+    import fitz
+    doc = fitz.open(stream=file_bytes, filetype="pdf")
+    text_parts = []
+    for page in doc:
+        text_parts.append(page.get_text())
+    doc.close()
+    return "\n".join(text_parts).strip()
+
+
+def extract_text_from_docx(file_bytes: bytes) -> str:
+    """使用 python-docx 提取 Word 文本内容。"""
+    from docx import Document
+    doc = Document(io.BytesIO(file_bytes))
+    paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
+    return "\n".join(paragraphs).strip()
+
+
+@app.post("/api/v1/extract")
+async def extract_file(file: UploadFile = File(...)):
+    """上传 PDF 或 Word 文档，返回提取的文本内容。
+
+    - 支持格式：.pdf, .docx（.doc 提示转换）
+    - 大小限制：10 MB
+    """
+    # 校验文件扩展名
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"不支持的文件格式 '{ext}'，请上传 PDF 或 Word 文档（.docx）。",
+        )
+
+    # 读取文件内容
+    file_bytes = await file.read()
+
+    # 校验文件大小
+    if len(file_bytes) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail="文件大小超过 10MB 限制，请压缩后上传。",
+        )
+
+    try:
+        if ext == ".pdf":
+            text = extract_text_from_pdf(file_bytes)
+        elif ext == ".docx":
+            text = extract_text_from_docx(file_bytes)
+        else:  # .doc
+            # 旧版 .doc 格式无法直接解析，提示用户转换
+            return {
+                "status": "error",
+                "message": "暂不支持旧版 .doc 格式，请将文件另存为 .docx 后重新上传。",
+                "filename": file.filename,
+            }
+
+        if not text:
+            return {
+                "status": "error",
+                "message": "未能从文件中提取到任何文本内容，请确认文件是否为扫描件（暂不支持 OCR）。",
+                "filename": file.filename,
+            }
+
+        return {
+            "status": "success",
+            "text": text,
+            "filename": file.filename,
+        }
+
+    except Exception as exc:
+        logger.exception("文件提取失败")
+        raise HTTPException(status_code=500, detail=f"文件解析失败: {str(exc)}") from exc
 
 
 @app.post("/api/v1/register")

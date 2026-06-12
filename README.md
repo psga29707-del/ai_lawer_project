@@ -29,7 +29,7 @@
 
 | 层级 | 技术 | 用途 |
 |------|------|------|
-| **后端框架** | FastAPI + uvicorn (端口 8001) | RESTful API 网关 |
+| **后端框架** | FastAPI + uvicorn (端口 8001) | RESTful API 网关（含文件上传提取） |
 | **大模型** | 智谱 GLM-4.7（兼容 OpenAI SDK） | 审查报告生成、条款修改 |
 | **Embedding** | 智谱 embedding-2 | 语义向量化 |
 | **向量数据库** | ChromaDB（本地持久化） | 法条语义检索（RAG） |
@@ -47,7 +47,7 @@
 ai_lawer_project/
 └── Faxiaozhi-Project/
     ├── ai-backend-fastapi/          # FastAPI 后端服务
-    │   ├── main.py                  # API 路由入口（11 个接口）
+    │   ├── main.py                  # API 路由入口（12 个接口）
     │   ├── config.py                # 全局配置（LLM/Chroma/MySQL/Prompts/聊天）
     │   ├── models/                  # SQLAlchemy 数据模型
     │   │   ├── base.py
@@ -151,6 +151,7 @@ http://localhost:8080/faxiaozhi/login.jsp
 | POST | `/api/v1/chat/conversations/create` | 创建新对话 |
 | POST | `/api/v1/chat/conversations/{id}/messages` | 获取对话消息历史 |
 | DELETE | `/api/v1/chat/conversations/{id}` | 删除对话 |
+| POST | `/api/v1/extract` | **文件上传与文本提取**（PDF/Word → 纯文本） |
 | POST | `/api/v1/chat/stream` | **SSE 流式聊天**（条件 RAG + 流式输出） |
 
 ### 调用示例
@@ -165,6 +166,10 @@ curl -X POST http://127.0.0.1:8001/api/v1/review \
 curl -X POST http://127.0.0.1:8001/api/v1/agent_modify \
   -H "Content-Type: application/json" \
   -d '{"text": "员工离职需提前三个月通知，否则支付违约金"}'
+
+# 文件上传提取（PDF/Word）
+curl -X POST http://127.0.0.1:8001/api/v1/extract \
+  -F "file=@contract.pdf"
 
 # 流式聊天（SSE）
 curl -N -X POST http://127.0.0.1:8001/api/v1/chat/stream \
@@ -244,7 +249,7 @@ ChromaDB 中已存储 **24 条**法律知识，涵盖：
 | **生成慢** | LLM 生成 30-50s | 已使用流式 SSE 分片输出 |
 | **密码安全** | 目前使用 SHA256（非 bcrypt/argon2） | 后续迭代改进 |
 | **无 Token** | 登录后未签发 JWT Token | 当前用 localStorage 存用户名 |
-| **环境依赖** | 需使用系统 Python（非 Anaconda）避免 langchain-openai 版本过旧 | 确认 `langchain-openai>=1.3.0` |
+| **环境依赖** | PyMuPDF / python-docx 需额外安装 | 使用 Anaconda Python 或 pip install 安装 |
 
 ---
 
@@ -252,11 +257,11 @@ ChromaDB 中已存储 **24 条**法律知识，涵盖：
 
 - [ ] 换用本地 embedding 模型加速检索
 - [ ] 引入 Redis 缓存热点法条
-- [ ] 支持 PDF 合同文件上传
 - [ ] 管理后台：用户管理 + 法条编辑
 - [ ] 增加律师在线咨询对接功能
-- [ ] 前端新增 Google Fonts 排版优化（Instrument Serif + Barlow）
+- [x] **PDF/Word 文件上传**：支持拖拽/点击上传 .pdf/.docx，后端解析提取文本
 - [x] 前端 UI 迭代：暗色终端风格、Three.js 3D 背景、滚动入场动效
+- [x] 前端新增 Google Fonts 排版优化（Instrument Serif + Barlow）
 - [x] 聊天界面优化：侧边栏折叠、快捷新对话按钮、空状态引导
 
 ---

@@ -11,3 +11,8 @@ sqlalchemy
 pymysql
 aiomysql
 tiktoken
+
+# 文件上传与解析
+python-multipart
+PyMuPDF
+python-docx
