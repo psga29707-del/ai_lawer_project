@@ -8,6 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="assets/css/inspect.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
 <div id="app">
@@ -302,11 +303,17 @@
 
                     <!-- 主区域：消息 + 输入 -->
                     <main class="chat-main">
-                        <button class="sidebar-toggle-btn console-ghost-btn"
-                                @click="showChatSidebar = !showChatSidebar"
-                                :title="showChatSidebar ? '隐藏对话列表' : '显示对话列表'">
-                            <i class="bi" :class="showChatSidebar ? 'bi-layout-sidebar-inset' : 'bi-layout-sidebar'"></i>
-                        </button>
+                        <div class="chat-toolbar">
+                            <button class="sidebar-toggle-btn console-ghost-btn"
+                                    @click="showChatSidebar = !showChatSidebar"
+                                    :title="showChatSidebar ? '隐藏对话列表' : '显示对话列表'">
+                                <i class="bi" :class="showChatSidebar ? 'bi-layout-sidebar-inset' : 'bi-layout-sidebar'"></i>
+                            </button>
+                            <button class="console-ghost-btn" @click="createNewConversation">
+                                <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                                新对话
+                            </button>
+                        </div>
                         <div class="chat-messages" ref="messagesRef">
                             <!-- 空状态 -->
                             <div v-if="chatMessages.length === 0 && !isChatLoading" class="chat-empty">
@@ -393,5 +400,19 @@
 <script src="assets/js/review-module.js"></script>
 <script src="assets/js/chat-module.js"></script>
 <script src="assets/js/app-inspect.js"></script>
+
+<!-- 滚动入场 + 微动效 -->
+<script>
+(function(){
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    // 滚动入场
+    var ro = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) {
+            if (e.isIntersecting) { e.target.classList.add('revealed'); ro.unobserve(e.target); }
+        });
+    }, { rootMargin: '0px 0px -60px 0px' });
+    document.querySelectorAll('.reveal').forEach(function(el) { ro.observe(el); });
+})();
+</script>
 </body>
 </html>

@@ -8,6 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="assets/css/login.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
 <div id="shader-bg"></div>
@@ -110,5 +111,18 @@
 <script src="assets/js/constants.js"></script>
 <script src="assets/js/background-login.js"></script>
 <script src="assets/js/app-login.js"></script>
+
+<!-- 滚动入场动效 -->
+<script>
+(function(){
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var ro = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) {
+            if (e.isIntersecting) { e.target.classList.add('revealed'); ro.unobserve(e.target); }
+        });
+    }, { rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal').forEach(function(el) { ro.observe(el); });
+})();
+</script>
 </body>
 </html>

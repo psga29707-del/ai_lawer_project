@@ -35,7 +35,7 @@
 | **向量数据库** | ChromaDB（本地持久化） | 法条语义检索（RAG） |
 | **关系数据库** | MySQL + SQLAlchemy 异步 ORM | 用户注册 / 登录 |
 | **AI Agent** | LangChain Agent 框架 | 逐条分析 → 检索 → 修改 |
-| **前端** | JSP + Vue 3 + Bootstrap 5 + Three.js | 暗色控制台审查工作台 + 聊天界面 |
+| **前端** | JSP + Vue 3 + Bootstrap 5 + Three.js + Google Fonts | 暗色控制台审查工作台 + 聊天界面（滚动入场动效） |
 | **AI 对话** | SSE 流式 + 条件 RAG + 持久化记忆 | "单纯聊聊"法律问答功能 |
 | **部署** | 前端 → Tomcat / 后端 → uvicorn | 前后端分离 |
 
@@ -72,8 +72,22 @@ ai_lawer_project/
     │   └── chroma_data/             # ChromaDB 持久化（24 条向量）
     ├── web-frontend-jsp/            # JSP 前端页面
     │   ├── login.jsp                # 登录 / 注册（毛玻璃 + Shader 背景）
-    │   ├── inspect.jsp              # 合同审查控制台（暗色主题）
-    │   └── WEB-INF/web.xml          # Tomcat 部署配置
+    │   ├── inspect.jsp              # 合同审查控制台（暗色主题 + Three.js 3D 背景）
+    │   ├── WEB-INF/web.xml          # Tomcat 部署配置
+    │   └── assets/
+    │       ├── css/
+    │       │   ├── login.css        # 登录页毛玻璃暗色样式
+    │       │   └── inspect.css      # 控制台终端风格样式
+    │       ├── js/
+    │       │   ├── constants.js     # API 常量
+    │       │   ├── utils.js         # 工具函数
+    │       │   ├── app-login.js     # 登录页 Vue 3 逻辑
+    │       │   ├── app-inspect.js   # 控制台 Vue 3 主逻辑
+    │       │   ├── background-login.js   # Three.js Shader 粒子背景
+    │       │   ├── background-inspect.js # Three.js 3D 场景背景
+    │       │   ├── chat-module.js   # 法律问答聊天模块
+    │       │   └── review-module.js # 合同审查模块
+    │       └── images/              # 图片资源
     └── docs/
         └── specs/                   # 设计规格文档
 ```
@@ -241,6 +255,9 @@ ChromaDB 中已存储 **24 条**法律知识，涵盖：
 - [ ] 支持 PDF 合同文件上传
 - [ ] 管理后台：用户管理 + 法条编辑
 - [ ] 增加律师在线咨询对接功能
+- [ ] 前端新增 Google Fonts 排版优化（Instrument Serif + Barlow）
+- [x] 前端 UI 迭代：暗色终端风格、Three.js 3D 背景、滚动入场动效
+- [x] 聊天界面优化：侧边栏折叠、快捷新对话按钮、空状态引导
 
 ---
 
